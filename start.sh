@@ -1,10 +1,15 @@
 #!/data/data/com.termux/files/usr/bin/bash
 echo "Memulai instalasi PHP di Termux..."
 pkg update -y && pkg upgrade -y
-pkg install php
+pkg install -y php nano
+
 php -v
-echo "<?php
+
+# Membuat file osist.php
+cat > osist.php << 'EOF'
+<?php
 system("clear");
+
 function gradientText($text) {
     $colors = [36, 32]; // ANSI color codes for cyan (tosca) and green
     $coloredText = "";
@@ -64,21 +69,25 @@ do {
         echo "Gagal mendapatkan respons dari API.\n";
     } else {
         $body = json_decode($response, true);
-        
-        foreach ($body["List"] as $databaseName => $info) {
-            $text = "<b>$databaseName</b>\n\n";
-            $text .= $info["InfoLeak"] . "\n\n";
-            
-            if ($databaseName !== "No results found") {
-                foreach ($info["Data"] as $reportData) {
-                    foreach ($reportData as $columnName => $value) {
-                        $text .= "<b>$columnName</b>: $value\n";
+
+        if (!isset($body["List"])) {
+            echo "Format respons API tidak sesuai.\n";
+        } else {
+            foreach ($body["List"] as $databaseName => $info) {
+                $text = "\n\033[36m<b>$databaseName</b>\033[0m\n\n";
+                $text .= $info["InfoLeak"] . "\n\n";
+                
+                if ($databaseName !== "No results found") {
+                    foreach ($info["Data"] as $reportData) {
+                        foreach ($reportData as $columnName => $value) {
+                            $text .= "\033[32m<b>$columnName</b>\033[0m: $value\n";
+                        }
+                        $text .= "\n";
                     }
-                    $text .= "\n";
                 }
+                
+                echo $text;
             }
-            
-            echo $text;
         }
     }
     
@@ -88,5 +97,8 @@ do {
         echo "\033[32mSiap bos!\033[0m\n";
         system("clear");
     }
-} while (strtolower($ulang) === "y");" > osist.php
+} while (strtolower($ulang) === "y");
+EOF
+
+# Menjalankan script PHP
 php osist.php
